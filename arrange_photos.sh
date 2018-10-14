@@ -5,6 +5,9 @@ BASEDIR="$2"
 LABEL="$3"
 FINDOPTS="$4"
 
+VIDEOEXTS="mp4:mov:avi:vob:flv:mkv:wmv:qt:mpg:mpeg:ogv"
+VIDEODIR="videos"
+
 function getShotAt() {
    exiftool -dateTimeOriginal -dateFormat %s -veryShort "$1" 2>/dev/null | cut -d' ' -f2
 }
@@ -21,7 +24,7 @@ find "${DIR}" -type f $FINDOPTS | while read FPATH ; do
    SHOTAT=`getShotAt "${FPATH}"`
    FMOD=`stat -c'%Y' "${FPATH}"`
    FNAME=`basename "${FPATH}"`
-   FEXT="${filename##*.}"
+   FEXT=`echo ${FNAME##*.} |  tr '[:upper:]' '[:lower:]'`
 
    if [ -z "$SHOTAT" ] ; then
        SHOTAT="${FMOD}"
@@ -34,8 +37,12 @@ find "${DIR}" -type f $FINDOPTS | while read FPATH ; do
        NEWDIR="${NEWDIR}-${LABEL}"
    fi
 
+   if [[ ":${VIDEOEXTS}:" = *:$FEXT:* ]] ; then
+      NEWDIR="${NEWDIR}/${VIDEODIR}"
+   fi
+
    NEWPATH="${BASEDIR}/${NEWDIR}/$FNAME"
    echo -e "+ ${FPATH}\t->\t${NEWPATH}"
-#   mkdir -p "${BASEDIR}/${NEWDIR}"
-#   mv "${FPATH}" "${NEWPATH}"
+   mkdir -p "${BASEDIR}/${NEWDIR}"
+   mv "${FPATH}" "${NEWPATH}"
 done
